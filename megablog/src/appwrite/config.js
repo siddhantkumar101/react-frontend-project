@@ -1,5 +1,5 @@
-import conf from "../conf.js";
-import { Client, Databases, Storage } from "appwrite";
+import conf from "../conf/conf.js";
+import { Client, Databases, Storage, ID } from "appwrite";
 
 export class Service {
   client = new Client();
@@ -8,20 +8,20 @@ export class Service {
 
   constructor() {
     this.client
-      .setEndpoint(conf.appwriteUrl)         // Appwrite endpoint
-      .setProject(conf.appwriteProjectId);   // Appwrite project ID
+      .setEndpoint(conf.appwriteUrl)
+      .setProject(conf.appwriteProjectId);
 
     this.databases = new Databases(this.client);
     this.storage = new Storage(this.client);
   }
 
-  // ================= CREATE =================
+  // ================= CREATE POST =================
   async createPost({ title, slug, content, featuredImage, status, userId }) {
     try {
-      const response = await this.databases.createDocument(
+      return await this.databases.createDocument(
         conf.appwriteDatabaseId,
         conf.appwriteCollectionId,
-        slug, // document ID (can also be 'unique()' for auto ID)
+        slug,
         {
           title,
           slug,
@@ -31,23 +31,23 @@ export class Service {
           userId,
         }
       );
-      return response;
     } catch (error) {
       console.error("Error creating post:", error);
+      throw error;
     }
   }
 
   // ================= READ =================
   async getPost(slug) {
     try {
-      const response = await this.databases.getDocument(
+      return await this.databases.getDocument(
         conf.appwriteDatabaseId,
         conf.appwriteCollectionId,
         slug
       );
-      return response;
     } catch (error) {
       console.error("Error fetching post:", error);
+      throw error;
     }
   }
 
@@ -60,13 +60,14 @@ export class Service {
       return response.documents;
     } catch (error) {
       console.error("Error listing posts:", error);
+      throw error;
     }
   }
 
   // ================= UPDATE =================
   async updatePost({ slug, title, content, featuredImage, status, userId }) {
     try {
-      const response = await this.databases.updateDocument(
+      return await this.databases.updateDocument(
         conf.appwriteDatabaseId,
         conf.appwriteCollectionId,
         slug,
@@ -78,37 +79,61 @@ export class Service {
           userId,
         }
       );
-      return response;
     } catch (error) {
       console.error("Error updating post:", error);
+      throw error;
     }
   }
 
-  // ================= DELETE =================
+  // ================= DELETE POST =================
   async deletePost(slug) {
     try {
-      const response = await this.databases.deleteDocument(
+      return await this.databases.deleteDocument(
         conf.appwriteDatabaseId,
         conf.appwriteCollectionId,
         slug
       );
-      return response;
     } catch (error) {
       console.error("Error deleting post:", error);
+      throw error;
     }
   }
 
   // ================= UPLOAD IMAGE =================
-  async uploadImage(file) {
+  async uploadFile(file) {
     try {
-      const response = await this.storage.createFile(
+      return await this.storage.createFile(
         conf.appwriteBucketId,
-        "unique()", // File ID will be auto-generated
+        ID.unique(),
         file
       );
-      return response;
     } catch (error) {
-      console.error("Error uploading image:", error);
+      console.error("Error uploading file:", error);
+      throw error;
     }
   }
+
+  // ================= DELETE IMAGE =================
+  async deleteFile(fileId) {
+    try {
+      return await this.storage.deleteFile(
+        conf.appwriteBucketId,
+        fileId
+      );
+    } catch (error) {
+      console.error("Error deleting file:", error);
+      throw error;
+    }
+  }
+
+  // ================= FILE PREVIEW (IMAGE URL) =================
+  getFilePreview(fileId) {
+    return this.storage.getFilePreview(
+      conf.appwriteBucketId,
+      fileId
+    );
+  }
 }
+
+const service = new Service();
+export default service;
