@@ -17,6 +17,7 @@ export class Service {
 
   // ================= CREATE POST =================
   async createPost({ title, slug, content, featuredImage, status, userId }) {
+    console.log("slug", slug);
     try {
       return await this.databases.createDocument(
         conf.appwriteDatabaseId,
@@ -65,19 +66,13 @@ export class Service {
   }
 
   // ================= UPDATE =================
-  async updatePost({ slug, title, content, featuredImage, status, userId }) {
+  async updatePost(documentId, data) {
     try {
       return await this.databases.updateDocument(
         conf.appwriteDatabaseId,
         conf.appwriteCollectionId,
-        slug,
-        {
-          title,
-          content,
-          featuredImage,
-          status,
-          userId,
-        }
+        documentId,
+        data
       );
     } catch (error) {
       console.error("Error updating post:", error);
@@ -126,7 +121,7 @@ export class Service {
     }
   }
 
-  // ================= FILE PREVIEW (IMAGE URL) =================
+  // ================= FILE PREVIEW =================
   getFilePreview(fileId) {
     return this.storage.getFilePreview(
       conf.appwriteBucketId,
